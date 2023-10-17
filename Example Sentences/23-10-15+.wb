@@ -1,0 +1,39 @@
+devise: Mack devised the mirror test.	/	devise an experiment	//	devise a method	->(devisee)
+
+humidity: How could you know the humidity and temperature?	/	high humidity	/	relative humidity	->(humid, humidify, dehumidify)
+
+hollow: a hollow tree	//	hollow out	->(hollowness)
+
+burrow: The males dig burrows to protect their young from the desert sun.	/	dig a burrow	/	an underground burrow
+
+bark: bark madly at a door	//	a piece of bark	->(barking, debark)
+
+fatigue: physical fatigue	/	mental fatigue	->(fatigued, fatiguing)
+
+fortnight: She has known him only a fortnight.	/	a fortnight ago	/	a fortnight's holiday
+
+treadmill: I'd like you to get on this treadmill and run for ten minutes.
+
+asymmetry: See, if he was fabricating this, I'd expect to see an asymmetry in his face.	/	information asymmetry	!~(symmetry)	->(asymmetrical, asymmetric)
+
+lethal: These people knew how to make lethal weapons.	!~(nonlethal)	~(fatal)
+
+colony: establish a colony	//	a colony of ants	->(colonize, colonization, colonizer)
+
+stab: stab meat with a fork	->(stabbing)
+
+flint: ->(flinty)
+
+commodity: We'd be treated as a commodity to be bought, traded and sold.	/	commodity prices	/	an expensive commodity	/	a valuable commodity	~(goods)
+
+lane: a swimming lane
+
+inductive: inductive arguments don't provide you with certainty.	/	an inductive argument	/	inductive reasoning
+
+session: As you can see, the course is split into morning and afternoon sessions.	/	a training session	//	in session	/	an emergency session	//	in the first session	//	a question-and-answer session
+
+unwrap: unwrap a package	/	unwrap a present	!~(wrap)	->(wrapping, wrapper)
+
+punctual: I'm always punctual in my working life.	/	a punctual person	/	be punctual for an appointment	!~(unpunctual)	->(punctually, punctuality)	~(on time)
+
+

@@ -231,7 +231,7 @@ def format_dict_by_special_symbol():
             lt[len(lt) - 1] += '\n' # 在字典的最后一个成员后, 追加'\n' 来分割不同的单词查询
             format_dict[key] = lt   # 修改字典
 
-def check_validation(search_word : str, possible_search_result_len : int) -> int:
+def check_validation(search_word : str, possible_search_result_len : int = 0) -> int:
     if search_word in INVALIDATION_KEY_LIST or search_word[0] in INVALIDATION_KEY_LIST: # 防止 " xxx" 这样的写法
         return 0
 
@@ -289,6 +289,7 @@ def search_dict():
                 print(f"{s}")
             # possible_search_result.clear()    # 这里就不清理了, 允许用户多次通过数字查询(只要用户不输入单词, 可以一直查询先前的possible_search_result)
         else:
+            # 进行模糊搜索
             possible_search_result.clear()
             for s in key_list:
                 result = re.search(search_word, s)
@@ -338,11 +339,116 @@ def read_line_dict():
 def exit_dict():
     os._exit()
 
+def generate_final_value_to_mydict(word : str, results):
+    value = ""
+    for index, _ in enumerate(results):
+        if len(results[index]) == 0:
+            continue
+        if index == 1:
+            for s in results[index]:
+                value += s.rstrip("\t/")
+                value += "\t//\t"
+            value = value.rstrip("\t/")
+            value += "\t"
+        else:
+            for s in results[index]:
+                value += s + "\t"
+    
+    value = value.rstrip("\t")
+    value += "\n"
+
+    print(f"{word} : {value}")
+    return value
+
+def write_new_word_to_file(word : str, value : str, file_name : str):
+    with open(file_name, 'a') as f:
+        f.write(f"{word}: {value}\n")
+
+def add_words_to_dict():
+    latest_wb_file = '0'
+    for file in file_list:
+        latest_wb_file = max(latest_wb_file, file)
+
+    new_word = input("Please enter the word you want to add: ")
+    if not check_validation(new_word):
+        print("Error Word Input!")
+        return
+    if new_word in my_dict:
+        print(f"{new_word} has already existed!")
+        return
+
+    print("""
+    \t0. No need to add
+    \t1. Add Sentence
+    \t2. Add Another Meaning Sentence
+    \t3. Add Attribute
+    \t4. Synonym
+    \t5. Antonym
+    \t6. Deformation
+    \t7. Equivalence
+    \t8. All Done - Save this Word to the Dict
+    """)
+
+    value = ""
+    results = [[] * 8 for _ in range(8)]
+    while True:
+        select = input("Choose to add additional attributes: ")
+        if not select.isdigit():
+            print("Wrong Input!!!")
+            continue
+        
+        select = int(select)
+
+        if select < 0 or select > 8:
+            print("Your select is out of range!")
+            continue
+
+        if select == 0:
+            break
+        elif select == 8:
+            value = generate_final_value_to_mydict(new_word, results)
+            write_new_word_to_file(new_word, value, latest_wb_file)
+            break
+        else:
+            raw_value = input("Input the content you want to add: \n")
+            if raw_value == "":
+                print("You can not input empty content!")
+                continue
+
+            if select == 1:
+                index = len(results[1])
+                if index == 0:
+                    results[1].append("")
+                    index = index + 1
+                results[1][index - 1] += raw_value + "\t/\t"
+            elif select == 2:
+                index = len(results[1])
+                results[1].append("")
+                results[1][index] += raw_value + "\t/\t"
+            elif select == 3:
+                results[select].append(f"{ATTRIBUTE}({raw_value})")
+            elif select == 4:
+                results[select].append(f"{SYNONYM}({raw_value})")
+            elif select == 5:
+                results[select].append(f"{ANTONYM}({raw_value})")
+            elif select == 6:
+                results[select].append(f"{DEFORMATION}({raw_value})")
+            elif select == 7:
+                results[select].append(f"{EQUIVALENCE}({raw_value})")
+
+            # if select == 1:
+            #     value += raw_value + "\t/"
+            # elif select == 2:
+            #     value += raw_value + "\t//"
+            # elif select == 3:
+            #     value += ATTRIBUTE + f"({raw_value})" + "\t" 
+            # pass
 
 mode_dict = {
     0 : exit_dict,
     1 : search_dict,
-    2 : read_line_dict
+    2 : read_line_dict,
+    3 : add_words_to_dict
 }
 
 def select_mode():
