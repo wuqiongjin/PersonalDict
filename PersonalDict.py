@@ -351,8 +351,13 @@ def generate_final_value_to_mydict(word : str, results):
             value = value.rstrip("\t/")
             value += "\t"
         else:
+            # 处理分多次输入的 单词变形 ['history', 'historic, historian'] 这种，将它们合并到一起
+            combined_value = f"{SPECIAL_SYMBOL_LIST[index - 3]}("
             for s in results[index]:
-                value += s + "\t"
+                combined_value += s + ", "
+            combined_value = combined_value.rstrip(", ")
+            combined_value += ")"
+            value += combined_value + "\t"
     
     value = value.rstrip("\t")
     value += "\n"
@@ -448,7 +453,8 @@ def add_words_to_dict():
                 results[1][index] += raw_value + "\t/\t"
                 stack.append((select,))
             else:
-                results[select].append(f"{SPECIAL_SYMBOL_LIST[select - 3]}({raw_value})")
+                # results[select].append(f"{SPECIAL_SYMBOL_LIST[select - 3]}({raw_value})")
+                results[select].append(raw_value)
                 stack.append((select,))
 
 mode_dict = {
