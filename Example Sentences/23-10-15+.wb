@@ -36,4 +36,11 @@ unwrap: unwrap a package	/	unwrap a present	!~(wrap)	->(wrapping, wrapper)
 
 punctual: I'm always punctual in my working life.	/	a punctual person	/	be punctual for an appointment	!~(unpunctual)	->(punctually, punctuality)	~(on time)
 
+intake: Their stomachs burst from sudden intake of so much food.	/	calorie intake	/	alcohol intake	//	an intake of students
+
+penetration: Upon penetration of the skin, the dart only left a tiny red dot.	//	market penetration	/	internet penetration rate	!~(impenetrable)	->(penetrate, penetrating)
+
+municipal: municipal elections	/	municipal councils	->(municipality)
+
+deficit: They have more attention deficit difficulties.
 

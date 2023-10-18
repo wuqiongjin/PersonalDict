@@ -40,7 +40,7 @@ special_forms_map = {}  # special_form : [symbol, orignal] 提供 特殊变形->
 lock = threading.Lock()
 quit_flag = False
 
-def init_parameter():
+def init_parameters():
     global DICT_INFO, DICT_PATH
     DICT_INFO = DICT_INFO.format(USER=USER)
     cur_file_path = os.path.realpath(__file__)
@@ -378,7 +378,7 @@ def add_words_to_dict():
         return
 
     print("""
-    \t0. No need to add
+    \t0. Quit
     \t1. Add Sentence
     \t2. Add Another Meaning Sentence
     \t3. Add Attribute
@@ -386,11 +386,14 @@ def add_words_to_dict():
     \t5. Antonym
     \t6. Deformation
     \t7. Equivalence
-    \t8. All Done - Save this Word to the Dict
+    \t8. All Done --- Save this Word to the Dict
+    \t9. Withdraw last Input
+    \t10. CLEAR ALL Input (CAN NOT WITHDRAW!)
     """)
 
     value = ""
     results = [[] * 8 for _ in range(8)]
+    stack = []
     while True:
         select = input("Choose to add additional attributes: ")
         if not select.isdigit():
@@ -399,7 +402,7 @@ def add_words_to_dict():
         
         select = int(select)
 
-        if select < 0 or select > 8:
+        if select < 0 or select > 10:
             print("Your select is out of range!")
             continue
 
@@ -409,6 +412,23 @@ def add_words_to_dict():
             value = generate_final_value_to_mydict(new_word, results)
             write_new_word_to_file(new_word, value, latest_wb_file)
             break
+        elif select == 9:
+            if len(stack) == 0:
+                print("Nothing can be withdrew!")
+                continue
+
+            operation = stack.pop()
+            if operation[0] == 1:
+                index = len(results[1]) - 1
+                results[1][index] = results[1][index].replace(operation[1], "")
+            elif operation[0] == 2:
+                results[1].pop()
+            else:
+                results[operation[0]].pop()
+
+        elif select == 10:
+            results = [[] * 8 for _ in range(8)]
+            stack.clear()
         else:
             raw_value = input("Input the content you want to add: \n")
             if raw_value == "":
@@ -421,28 +441,15 @@ def add_words_to_dict():
                     results[1].append("")
                     index = index + 1
                 results[1][index - 1] += raw_value + "\t/\t"
+                stack.append((select, raw_value + "\t/\t"))
             elif select == 2:
                 index = len(results[1])
                 results[1].append("")
                 results[1][index] += raw_value + "\t/\t"
-            elif select == 3:
-                results[select].append(f"{ATTRIBUTE}({raw_value})")
-            elif select == 4:
-                results[select].append(f"{SYNONYM}({raw_value})")
-            elif select == 5:
-                results[select].append(f"{ANTONYM}({raw_value})")
-            elif select == 6:
-                results[select].append(f"{DEFORMATION}({raw_value})")
-            elif select == 7:
-                results[select].append(f"{EQUIVALENCE}({raw_value})")
-
-            # if select == 1:
-            #     value += raw_value + "\t/"
-            # elif select == 2:
-            #     value += raw_value + "\t//"
-            # elif select == 3:
-            #     value += ATTRIBUTE + f"({raw_value})" + "\t" 
-            # pass
+                stack.append((select,))
+            else:
+                results[select].append(f"{SPECIAL_SYMBOL_LIST[select - 3]}({raw_value})")
+                stack.append((select,))
 
 mode_dict = {
     0 : exit_dict,
@@ -453,7 +460,14 @@ mode_dict = {
 
 def select_mode():
     try:
-        mode = int(input("choose a mode to use:\n"))
+        print("""--------- Welcome to PersonalDict! ----------
+            0. Exit Dict
+            1. Search for Words
+            2. Browser Dict
+            3. Add New Word to Dict
+---------------------------------------------
+        """)
+        mode = int(input("choose a mode to use: "))
         if mode in mode_dict:
             mode_dict[mode]()
         else:
@@ -464,7 +478,7 @@ def select_mode():
         print("Wrong Input!")
 
 if __name__ == '__main__':
-    init_parameter()
+    init_parameters()
     load_dict()
     format_dict_by_meaning()
     format_dict_by_special_symbol()
