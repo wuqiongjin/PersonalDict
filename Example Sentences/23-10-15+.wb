@@ -56,5 +56,55 @@ patronage: His patronage brings to climax all our labors.	->(patron, patronize, 
 
 analogy: Can you make an analogy that might help us understand?	/	draw an analogy	/	analogy with(to)	->(analogous, analogize)
 
+precedent: There is a precedent to relieve a Scout of his duties.	/	without precedent	->(precede, precedence, preceding)
 
+obscurity: I lived for 13 years in NewYork in complete obscurity.	/	die in obscurity	/	fade into obscurity	->(obscure, obscurantism)
+
+ascertain: I'm not sure what time, but that should not be hard to ascertain.	/	ascertain the facts	/	ascertain whether...	~(find)	->(certain)
+
+esteem: Thank you for your service. You have earned my highest esteem.	/	earn my esteem	/	be held in high esteem	/	be highly esteemed	~(respect)	->(self-esteem, esteemed, disesteem)
+
+legitimacy: Mack responded by defending his legitimacy and refusing to step down.	/	the document's legitimacy	/	question the legitimacy of...	->(legitimate, legitimately, legitimize)
+
+discrepancy: I found a small discrepancy in our numbers.	/	find a discrepancy	//	discrepancy between A and B	~(difference)	->(discrepant)
+
+benevolent: a benevolent leader	!~(malevolent)	->(benevolence)
+
+malevolent: a malevolent action	/	a malevolent voice	!~(benevolent)	->(malevolence, malevolently)
+
+downsize: We will not be downsizing our employees.	/	downsize employees	->(size, downsizing, sizeable)
+
+glitter: It is an old saying that all is not gold that glitters.	/	glitter in the sun	//	glitter with joy	~(gleam)	->(glittering, glittery)
+
+subsequent: Subsequent analysis suggests he was wrong about that.	/	subsequent years	//	subsequent generations	!~(previous)	->(subsequently, subsequence)
+
+council: a city council	/	a local council	/	the State Council	~(committee)	->(councillor)
+
+venomous: Venomous snakes are a real danger.	!~(nonvenomous)	->(venom, envenom)
+
+intellectual: Mack was born with some intellectual disabilities.	/	intellectual property	//	artists and intellectuals	!~(nonintellectual)	->(intellect, intellectually)
+
+strain: These are difficult times. They put a strain on us all.	/	put a strain on	/	a strain in a relationship	//	break under the strain	//	muscle strain	//	a strain of the virus	@(n, vt)	->(restrain, restraint, self-restraint)
+
+leukaemia: He has an incurable form of leukaemia.	/	suffer from leukaemia	/	cure leukaemia	<=>(leukemia)
+
+terminology: It's official police terminology.	/	medical terminology	~(term)	->(term, terms, long-term)
+
+centennial: This year it is celebrating its centennial, or 100th anniversary.	/	a centennial celebration	->(bicentennial, semicentennial, centesimal, centenarian)
+
+outdo: You would have to go a long way to outdo Superman.	/	not to be outdone	/	outdo sb in sth	~(surpass)	->(do, doing, wrongdoing)
+
+discipline: The best you can do is try to get them to obey, to learn discipline.	/	a lack of discipline	/	a discipline problem	//	across disciplines	//	discipline a student	//	discipline myself	@(n, vt)	->(disciplinary, interdisciplinary, self-discipline)
+
+consequent: His long illness and consequent absence put him far behind in his work.	/	the consequent effect	!~(inconsequential)	->(consequence, consequential)
+
+segment: The fastest growing segment of the app world is mobile gaming.	/	a segment of the population	~(section)	->(segmented, segmental, segmentation)
+
+orchestra: She was a concert violinist with the orchestra.	/	conduct an orchestra	/	a symphony orchestra	->(orchestral, orchestrate)
+
+delegate: Convention delegates voted on candidates.	/	a convention delegate	//	delegate sth to sb	@(n, vi, vt)	->(delegation, delegacy)
+
+fragile: We tend to think of glass as fragile.	/	fragile glass	/	a fragile relationship	~(delicate)	->(fragility)
+
+radiate: They radiate happiness.	/	radiate charisma	/	radiate heat	//	radiate a light	//	radiate outwards	//	radiate from sb	~(give off sth)
 
