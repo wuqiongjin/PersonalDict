@@ -484,7 +484,7 @@ blunt: Someone hit him hard with a blunt instrument.
 
 stockpile: a stockpile of weapons	//	stockpile weapons
 
-hypothesis: Do you have any evidence to support that hypothesis?
+hypothesis: Do you have any evidence to support that hypothesis?	->(hypothetical)
 
 blade: The blade is sharp, so be careful.	/	a razor blade	/	a fan blade
 
