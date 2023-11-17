@@ -5,7 +5,6 @@ import sys
 import re
 import threading
 import time
-import hashlib
 import getpass
 
 USER = getpass.getuser()
@@ -19,13 +18,15 @@ SYNONYM = r'~'
 ANTONYM = r'!~'
 DEFORMATION = r'->'
 EQUIVALENCE = r'<=>'
-SPECIAL_SYMBOL_LIST = [ATTRIBUTE, SYNONYM, ANTONYM, DEFORMATION, EQUIVALENCE]
+TRANSLATION = r'*'
+SPECIAL_SYMBOL_LIST = [ATTRIBUTE, SYNONYM, ANTONYM, DEFORMATION, EQUIVALENCE, TRANSLATION]
 SPECIAL_SYMBOL_MAP = {
     ATTRIBUTE : '(Attribute)\n',
     SYNONYM : '(Synonym)\n',
     ANTONYM : '(Antonym)\n',
     DEFORMATION : '(Deformation)\n',
-    EQUIVALENCE : '(Equivalence)\n'
+    EQUIVALENCE : '(Equivalence)\n',
+    TRANSLATION : '(TRANSLATION)\n'
 }
 DUPLICATE_CONTAIN_SYMBOL_FILTER = {}
 INVALIDATION_KEY_LIST = ['', ' ', '\n', '\\', '\\\\\\']
@@ -36,6 +37,7 @@ my_dict = {}        # key : value, value未经任何格式规划处理
 format_dict = {}    # 格式化字典, 里面存储了已经按照 固定格式 的单词内容
 key_list = []       # 提供模糊搜索数据来源的key的集合(其实就是所有的key)
 special_forms_map = {}  # special_form : [symbol, orignal] 提供 特殊变形->原型 的映射, 方便用户通过搜索特殊变形来查找原型. symbol表示它是哪种变形, orignal存储的是原型key
+phrase_list = []   # 词组列表 （保存词组的列表, 里面存的是key)
 
 lock = threading.Lock()
 quit_flag = False
@@ -50,9 +52,10 @@ def init_parameters():
     for symbol in SPECIAL_SYMBOL_LIST:
         for s in symbol:
             DUPLICATE_CONTAIN_SYMBOL_FILTER[s] = 1
+    load_file_list()    # 初始化 file_list 变量
 
 def update_dict(filename : str):
-    with open(filename, "r") as f:
+    with open(filename, "r", encoding="utf-8") as f:
         lines = f.readlines()
         if lines == '\n' or lines == '':
             return
@@ -67,18 +70,26 @@ def update_dict(filename : str):
                 else:
                     my_dict[key_value[0]] = key_value[1].strip()
                     key_list.append(key_value[0])
+                    # 判断是否是词组, 如果是的话, 加入到 词组列表 当中
+                    if key_value[0].count(' '):
+                        phrase_list.append(key_value[0])
             except:
                 continue
 
 def load_dict():
-    # 获取字典目录下的所有单词本
+    """
+        @function: 获取字典目录下的所有单词本，读取这些单词本的内容，将其存入my_dict当中
+    """
     for filename in os.listdir(DICT_PATH):
         filename = DICT_PATH + filename # 拼接字典文件的路径前缀
         update_dict(filename)
 
 def load_file_list():
+    """
+        @function: 遍历DICT_PATH下的单词本, 将单词本的文件名称存储在 file_list 当中, 以便于后续使用file_list
+    """
     try:
-        with open(DICT_INFO, "r") as f:
+        with open(DICT_INFO, "r", encoding="utf-8") as f:
             for filename in os.listdir(DICT_PATH):
                 filename = DICT_PATH + filename
                 while True:
@@ -107,7 +118,7 @@ def monitor_dict_update():
                 break
             
         if NEED_UPDATE == True:
-            with open(DICT_INFO, "w") as f:
+            with open(DICT_INFO, "w", encoding="utf-8") as f:
                 for filename in os.listdir(DICT_PATH):
                     filename = DICT_PATH + filename
                     file_info = os.stat(filename)
@@ -321,9 +332,9 @@ def search_dict():
 #     result_text.insert("end", result)
 
 
-def read_line_dict():
+def read_line_dict(target=format_dict):
     lock.acquire()
-    for key in format_dict:
+    for key in target:
         print(f"{key}:")
         for s in format_dict[key]:
             print(f"{s}")
@@ -366,7 +377,7 @@ def generate_final_value_to_mydict(word : str, results):
     return value
 
 def write_new_word_to_file(word : str, value : str, file_name : str):
-    with open(file_name, 'a') as f:
+    with open(file_name, 'a', encoding="utf-8") as f:
         f.write(f"{word}: {value}\n")
 
 def add_words_to_dict():
@@ -378,22 +389,23 @@ def add_words_to_dict():
     if not check_validation(new_word):
         print("Error Word Input!")
         return
-    if new_word in my_dict:
+    if new_word.lower() in my_dict:
         print(f"{new_word} has already existed!")
         return
 
     print("""
-    \t0. Quit
-    \t1. Add Sentence
-    \t2. Add Another Meaning Sentence
-    \t3. Add Attribute
-    \t4. Synonym
-    \t5. Antonym
-    \t6. Deformation
-    \t7. Equivalence
-    \t8. All Done --- Save this Word to the Dict
-    \t9. Withdraw last Input
-    \t10. CLEAR ALL Input (CAN NOT WITHDRAW!)
+    \t-3. Quit
+    \t-2. CLEAR ALL Input (CAN NOT WITHDRAW!)
+    \t-1. Withdraw last Input
+    \t 0. All Done --- Save this Word to the Dict
+    \t 1. Add Sentence
+    \t 2. Add Another Meaning Sentence
+    \t 3. Add Attribute
+    \t 4. Synonym
+    \t 5. Antonym
+    \t 6. Deformation
+    \t 7. Equivalence
+    \t 8. Translation
     """)
 
     value = ""
@@ -401,23 +413,24 @@ def add_words_to_dict():
     stack = []
     while True:
         select = input("Choose to add additional attributes: ")
-        if not select.isdigit():
+        # if not select.isdigit():  # 无法判断负数, 小数
+        if not re.match(r"-?\d+", select):
             print("Wrong Input!!!")
             continue
         
         select = int(select)
 
-        if select < 0 or select > 10:
+        if select < -3 or select > 8:
             print("Your select is out of range!")
             continue
 
-        if select == 0:
+        if select == -3:
             break
-        elif select == 8:
+        elif select == 0:
             value = generate_final_value_to_mydict(new_word, results)
             write_new_word_to_file(new_word, value, latest_wb_file)
             break
-        elif select == 9:
+        elif select == -1:
             if len(stack) == 0:
                 print("Nothing can be withdrew!")
                 continue
@@ -431,7 +444,7 @@ def add_words_to_dict():
             else:
                 results[operation[0]].pop()
 
-        elif select == 10:
+        elif select == -2:
             results = [[] * 8 for _ in range(8)]
             stack.clear()
         else:
@@ -460,8 +473,9 @@ def add_words_to_dict():
 mode_dict = {
     0 : exit_dict,
     1 : search_dict,
-    2 : read_line_dict,
-    3 : add_words_to_dict
+    2 : add_words_to_dict,
+    3 : read_line_dict,
+    4 : lambda : read_line_dict(target=phrase_list)
 }
 
 def select_mode():
@@ -469,8 +483,9 @@ def select_mode():
         print("""--------- Welcome to PersonalDict! ----------
             0. Exit Dict
             1. Search for Words
-            2. Browser Dict
-            3. Add New Word to Dict
+            2. Add New Word to Dict
+            3. Browser Dict
+            4. Browser Phrase
 ---------------------------------------------
         """)
         mode = int(input("choose a mode to use: "))
@@ -485,20 +500,14 @@ def select_mode():
 
 if __name__ == '__main__':
     init_parameters()
-    load_dict()
-    format_dict_by_meaning()
-    format_dict_by_special_symbol()
-    load_file_list()
     thread = threading.Thread(target=monitor_dict_update)
     thread.start()
-
     try:
         while True:
             select_mode()
     except:
         quit_flag = True
         thread.join()
-
 
 
 

@@ -1,0 +1,48 @@
+dietary: dietary restrictions	/	dietary habits	->(diet, dieter, dietitian)
+
+predator: The life of a predator depends on its ability to hunt and kill game.	/	a natural predator	!~(prey)	->(predatory)
+
+brutal: a brutal punishment	/	a brutal attack	~(cruel, ruthless)	->(brute, brutally, brutality)
+
+faint: a faint voice	//	faint from exhaustion	@(adj, vi, n)	->(faintly, faintest, faintness)
+
+diaster: natural disaster	/	an air disaster	/	an economic disaster	~(catastrophe, calamity)	->(disastrous, disastrously)
+
+biography: I love reading history and especially biography.	/	a biography of Mack	/	write a biography	->(autobiography, biographer, auotobiographical)
+
+camel: They say the camel is the ship of desert.	/	ride a camel	//	a camel coat
+
+subsidiary: It is a subsidiary stream flowing into the main river.
+
+subsidy: Subsidies, discounts, and tax cuts will be provided to boost consumption.	/	an argicultural subsidy	/	a government subsidy	->(subsidize, subsidized)
+
+contrived: Such parables may seem too contrived to be illuminating.	->(contrive, contrivance)
+
+evolve: Dogs evolved from wolves.	/	evolve wings	//	evolve into a war	/	evolve from sth	->(evolution, evolutionary, evolutionarily)
+
+chew: Cooked meat is easier to chew.	/	chew on grass	/	chew your lip	/	chew gum	->(chewy)
+
+speculate: I don't need to speculate. I have science.	/	speculate on sth	->(speculation, speculative, speculator)
+
+bulge: The bulge in your jacket pocket, that's an extra box of shotgun shells.	/	a tidal bulge	->(bulging)
+
+revise: I think I am gonna have to revise my goals a little bit.	/	revise a goal	//	a revised edition	/	revise the terms	~(amend, modify)	->(revision, revisionism, revisionist)
+
+rigid: You are too tied to your rigid schedules.	/	rigid training	/	a rigid rule	//	rigid plastic	!~(nonrigid)	->(rigidly, rigidity)
+
+solemn: How very serious, how very solemn you look.	/	look solemn	//	a solemn promise	/	a solemn oath	->(solemnize, solemnly, solemnity)
+
+outsell: I'm brilliant, perceptive, and I have outsold her consistently.	->(sell, selling, seller, bestseller)
+
+forum: the World Economic Forum	/	an open forum	/	a forum on Minecraft
+
+anecdote: I told delightful anecdotes to make her laugh.	/	an amusing anecdote	->(anecdotal)
+
+prefabricate: Their secret is to prefabricate as much as possible in their factory beforehand.	->(fabricate, prefabricated, fabrication)
+
+paralysis: They have lost a lot of power because of this political paralysis.	/	economic paralysis	->(paralyses, paralyze, paralyzed)
+
+an insight into sth: We get an insight into how he was feeling from a reported conversation.	*(对...的洞悉)
+
+succumb to sth: Many of you will also be afraid. But we must not succumb to our fear.	*(屈服于, 抵挡不住...)
+
