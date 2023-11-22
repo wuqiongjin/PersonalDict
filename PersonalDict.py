@@ -409,7 +409,7 @@ def add_words_to_dict():
     """)
 
     value = ""
-    results = [[] * 8 for _ in range(8)]
+    results = [[] for _ in range(9)]
     stack = []
     while True:
         select = input("Choose to add additional attributes: ")
@@ -445,7 +445,7 @@ def add_words_to_dict():
                 results[operation[0]].pop()
 
         elif select == -2:
-            results = [[] * 8 for _ in range(8)]
+            results = [[] for _ in range(9)]
             stack.clear()
         else:
             raw_value = input("Input the content you want to add: \n")
