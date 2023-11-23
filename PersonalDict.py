@@ -11,14 +11,14 @@ USER = getpass.getuser()
 DICT_PATH = r'/Example Sentences/'
 DICT_INFO = r'C:/Users/{USER}/.dict_info.dat'
 
-SAME_MEANING_SEPERATOR = r'/'
-DIFFERENT_MEANING_SEPERATOR = r'//'
-ATTRIBUTE = r'@'
-SYNONYM = r'~'
-ANTONYM = r'!~'
-DEFORMATION = r'->'
-EQUIVALENCE = r'<=>'
-TRANSLATION = r'*'
+SAME_MEANING_SEPERATOR = '\t/\t'
+DIFFERENT_MEANING_SEPERATOR = '\t//\t'
+ATTRIBUTE = '@'
+SYNONYM = '~'
+ANTONYM = '!~'
+DEFORMATION = '->'
+EQUIVALENCE = '<=>'
+TRANSLATION = '*'
 SPECIAL_SYMBOL_LIST = [ATTRIBUTE, SYNONYM, ANTONYM, DEFORMATION, EQUIVALENCE, TRANSLATION]
 SPECIAL_SYMBOL_MAP = {
     ATTRIBUTE : '(Attribute)\n',
@@ -197,6 +197,27 @@ def format_dict_by_special_symbol():
                 return -1
             else:
                 return i - j
+            
+        def findMatchBorderIndex(target : str, startIndex : int, left_sep : str, right_sep : str):
+            """ Find the startIndex's sep corresponding right_sep
+            "*(abc(123), 456) ~(qwe)"
+            Args:
+                target (str): last_sentence
+                startIndex (int): the target's left_sep
+                left_sep (str): left_sep symbol
+                right_sep (str): right_sep symbol
+            """
+            stack = []
+            i = startIndex
+            while i < len(target):
+                if target[i] == left_sep:
+                    stack.append(left_sep)
+                elif target[i] == right_sep:
+                    stack.pop()
+                    if len(stack) == 0:
+                        return i
+                i += 1
+            return i
 
         for symbol in SPECIAL_SYMBOL_LIST:
             # index = last_sentence.find(symbol)    # 无法区分 !~ 和~
@@ -218,9 +239,11 @@ def format_dict_by_special_symbol():
 
             # 2. 将特殊符号部分的字符串append到lt后面
             for index_key in index_map:
-                core_word = last_sentence[index_map[index_key] + len(index_key) + 1 : last_sentence.find(')', index_map[index_key])]
+                startIndex = index_map[index_key] + len(index_key)
+                endIndex = findMatchBorderIndex(last_sentence, startIndex, '(', ')')
+                core_word = last_sentence[startIndex + 1 : endIndex]
                 
-                symbol_oringal_lt = [SPECIAL_SYMBOL_MAP[index_key].rstrip('\n'), key]    # special_forms_map的valu
+                symbol_oringal_lt = [SPECIAL_SYMBOL_MAP[index_key].rstrip('\n'), key]    # special_forms_map的value
                 
                 # 判断同一个 special symbol 中是否存在多个 word
                 if core_word.find(',') > 0:
