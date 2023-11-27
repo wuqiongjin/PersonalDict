@@ -18,6 +18,7 @@ This is a tool for memorizing Words.
 （Fixed）: 
 1. Support '/' in sentences
 2. Support '(' and ')' in deformations
+3. Distinguish Synonym and Antonym (There were issues with previous version： when !~ before ~, ~ will not be distinguished)
 
 ## Future Plan
 

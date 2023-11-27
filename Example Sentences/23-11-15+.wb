@@ -94,3 +94,11 @@ shore: swim to the shore	~(bank, coast)	->(offshore, onshore, shoreline, ashore,
 
 jostle: The crowd around them jostled.	*((在人群中)推, 挤, 撞)
 
+hostility: His histility to your plan is well-known.	/	the histility to hunting	~(opposition, resistance)	->(hostile, hostilities)
+
+grind: Grind up the cloves for the cookie recipe.	/	grind up cereals	/	grind corn	//	grind a blade	/	grind a mirror
+
+tense: Your muscles tense up when you hold.	/	tense your muscles	//	past tense	@(vt, n, vi)	->(tension, tenseness, tensor)	*(绷紧(v), 时态(n))
+
+extract: Mack was reading an extract from her new book.	/	an extract from sth	//	extract sth from...	->(extraction, extractor)	*(摘录, 浓缩物, 精华, 提取, 拔出)
+

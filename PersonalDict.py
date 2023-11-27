@@ -6,30 +6,20 @@ import re
 import threading
 import time
 import getpass
+import json
 
 USER = getpass.getuser()
 DICT_PATH = r'/Example Sentences/'
 DICT_INFO = r'C:/Users/{USER}/.dict_info.dat'
 
-SAME_MEANING_SEPERATOR = '\t/\t'
-DIFFERENT_MEANING_SEPERATOR = '\t//\t'
-ATTRIBUTE = '@'
-SYNONYM = '~'
-ANTONYM = '!~'
-DEFORMATION = '->'
-EQUIVALENCE = '<=>'
-TRANSLATION = '*'
-SPECIAL_SYMBOL_LIST = [ATTRIBUTE, SYNONYM, ANTONYM, DEFORMATION, EQUIVALENCE, TRANSLATION]
-SPECIAL_SYMBOL_MAP = {
-    ATTRIBUTE : '(Attribute)\n',
-    SYNONYM : '(Synonym)\n',
-    ANTONYM : '(Antonym)\n',
-    DEFORMATION : '(Deformation)\n',
-    EQUIVALENCE : '(Equivalence)\n',
-    TRANSLATION : '(TRANSLATION)\n'
-}
+config_obj = {}
+SPECIAL_SYMBOL_LIST = []
+# NAME_MAP2_SPECIAL_SYMBOL: 'ATTRIBUTE' : '@'
+# SPECIAL_SYMBOL_MAP2_PRINT_NAME: '@' : '(Attribute)\n'
+NAME_MAP2_SPECIAL_SYMBOL = {}
+SPECIAL_SYMBOL_MAP2_PRINT_NAME = {}
+INVALIDATION_KEY_LIST = []
 DUPLICATE_CONTAIN_SYMBOL_FILTER = {}
-INVALIDATION_KEY_LIST = ['', ' ', '\n', '\\', '\\\\\\']
 NEED_UPDATE = False
 
 file_list = {}      # 单词本的文件列表
@@ -43,16 +33,28 @@ lock = threading.Lock()
 quit_flag = False
 
 def init_parameters():
-    global DICT_INFO, DICT_PATH
+    global DICT_INFO, DICT_PATH, config_obj, SPECIAL_SYMBOL_LIST, NAME_MAP2_SPECIAL_SYMBOL, SPECIAL_SYMBOL_MAP2_PRINT_NAME, INVALIDATION_KEY_LIST
+
     DICT_INFO = DICT_INFO.format(USER=USER)
     cur_file_path = os.path.realpath(__file__)
     index = cur_file_path.rfind("\\")
     DICT_PATH = cur_file_path[:index] + DICT_PATH
+    load_file_list()    # 初始化 file_list 变量
 
+    # load config
+    with open(f'{cur_file_path[:index]}/pd_config.json', 'r') as f:
+        config_obj = json.load(f)
+
+    # init global parameter
+    SPECIAL_SYMBOL_LIST = list(config_obj['SYMBOL_MAP'].values())
+    NAME_MAP2_SPECIAL_SYMBOL = dict([key.upper(), val] for key, val in config_obj['SYMBOL_MAP'].items())    # 注意:列表推导式前面, 必须是 [key, val], 因为dict()方法只接受list转化过来
+    SPECIAL_SYMBOL_MAP2_PRINT_NAME = dict([val, f'({key})\n'] for key, val in config_obj['SYMBOL_MAP'].items())
+    INVALIDATION_KEY_LIST = config_obj['INVALID_KEY_LIST']
+
+    # DUPLICATE_CONTAIN_SYMBOL_FILTER 用于区分 ~ 和 !~
     for symbol in SPECIAL_SYMBOL_LIST:
         for s in symbol:
             DUPLICATE_CONTAIN_SYMBOL_FILTER[s] = 1
-    load_file_list()    # 初始化 file_list 变量
 
 def update_dict(filename : str):
     with open(filename, "r", encoding="utf-8") as f:
@@ -137,9 +139,9 @@ def monitor_dict_update():
 def format_dict_by_meaning():
     global format_dict
     for key in my_dict:
-        lt = my_dict[key].split(DIFFERENT_MEANING_SEPERATOR)
+        lt = my_dict[key].split(config_obj['SEPARATOR_MAP']['DIFFERENT_MEANING_SEPERATOR'])
         for index, val in enumerate(lt):
-            lt2 = val.split(SAME_MEANING_SEPERATOR)
+            lt2 = val.split(config_obj['SEPARATOR_MAP']['SAME_MEANING_SEPERATOR'])
             sentence = ''
             for i, v in enumerate(lt2):
                 sentence += '\t·' + v.strip('\t') + '\n'
@@ -152,9 +154,6 @@ def format_dict_by_special_symbol():
     for key in list(format_dict.keys()):
         lt = format_dict[key]
         last_sentence = lt[len(lt) - 1] # '(1)\n\t·That is in large part because of a dearth of money.\n\t·a dearth of evidence\t~(lack)\n' 保证last_sentence存的是最后一句，因为最后一句中才包含了特殊符号(这里的最后一句指的是(num)这里的num数字是最大的)
-        
-        index_map = {}
-        min_index = len(last_sentence)
 
         def get_next(pattern) -> list:
             # a a b a a f
@@ -179,9 +178,9 @@ def format_dict_by_special_symbol():
 
             return result
 
-        def find_symbol_by_KMP(last_sentence : str, symbol : str) -> int:
+        def find_symbol_by_KMP(last_sentence : str, symbol : str, startIndex : int = 0) -> int:
             next = get_next(symbol)
-            i : int = 0
+            i : int = startIndex
             j : int = 0
             while i < len(last_sentence) and j < len(symbol):
                 while j != 0 and last_sentence[i] != symbol[j]:
@@ -219,16 +218,23 @@ def format_dict_by_special_symbol():
                 i += 1
             return i
 
+        index_map = {}
+        min_index = len(last_sentence)
+
         for symbol in SPECIAL_SYMBOL_LIST:
-            # index = last_sentence.find(symbol)    # 无法区分 !~ 和~
-            index = find_symbol_by_KMP(last_sentence, symbol)   # 无法区分 !~ 和~
-            # 下面的判断就是解决 !~和~ 这样的问题的
-            if last_sentence[index - 1] and (last_sentence[index - 1] in DUPLICATE_CONTAIN_SYMBOL_FILTER 
-                                             or last_sentence[index + len(symbol)] in DUPLICATE_CONTAIN_SYMBOL_FILTER):
-                index = -1
-            if index >= 0:
-                index_map[symbol] = index
-                min_index = min(min_index, index)   # 确保index不是-1
+            index = 0
+            while index != -1:  # 这里用循环的原因: 当遇到 !~ 和 ~ 同时存在时, 为了找 ~, 需要找2次才能匹配到.
+                index = find_symbol_by_KMP(last_sentence, symbol, index)   # 无法区分 !~ 和~
+                # 下面的判断就是解决 !~和~ 这样的问题的: '将!~识别2次, 一次是作为!~, 一次是作为~'
+                if index != -1 and (last_sentence[index - 1] in DUPLICATE_CONTAIN_SYMBOL_FILTER 
+                                                or last_sentence[index + len(symbol)] in DUPLICATE_CONTAIN_SYMBOL_FILTER):
+                    index += len(symbol)
+                    continue
+
+                if index >= 0:
+                    index_map[symbol] = index
+                    min_index = min(min_index, index)   # 确保index不是-1
+                    index += len(symbol)
         
         # 证明存在special symbol
         if len(index_map) > 0:
@@ -243,7 +249,8 @@ def format_dict_by_special_symbol():
                 endIndex = findMatchBorderIndex(last_sentence, startIndex, '(', ')')
                 core_word = last_sentence[startIndex + 1 : endIndex]
                 
-                symbol_oringal_lt = [SPECIAL_SYMBOL_MAP[index_key].rstrip('\n'), key]    # special_forms_map的value
+                symbol_oringal_lt = [SPECIAL_SYMBOL_MAP2_PRINT_NAME[index_key].rstrip('\n'), key]    # special_forms_map的value
+                # divided_symbol_lt = [key]   # xxx_form_map的value, 它的value是一个list, 里面可能会有多组key值
                 
                 # 判断同一个 special symbol 中是否存在多个 word
                 if core_word.find(',') > 0:
@@ -251,15 +258,15 @@ def format_dict_by_special_symbol():
                     core_word = ''
                     for word in core_word_lt:
                         core_word += '\t·' + word.strip(' ') + '\n'
-                        if index_key != ATTRIBUTE:
+                        if index_key != NAME_MAP2_SPECIAL_SYMBOL['ATTRIBUTE']:
                             special_forms_map[word.strip(' ')] = symbol_oringal_lt
                     core_word = core_word.rstrip('\n')  # 多加了一个'\n' 要删除掉
                 else:
-                    if index_key != ATTRIBUTE:
+                    if index_key != NAME_MAP2_SPECIAL_SYMBOL['ATTRIBUTE']:
                         special_forms_map[core_word] = symbol_oringal_lt
                     core_word = '\t·' + core_word
 
-                symbol_sentence = SPECIAL_SYMBOL_MAP[index_key] + core_word
+                symbol_sentence = SPECIAL_SYMBOL_MAP2_PRINT_NAME[index_key] + core_word
                 lt.append(symbol_sentence)
 
             lt[len(lt) - 1] += '\n' # 在字典的最后一个成员后, 追加'\n' 来分割不同的单词查询

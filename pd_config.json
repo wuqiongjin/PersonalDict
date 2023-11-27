@@ -1,0 +1,15 @@
+{
+    "SYMBOL_MAP" : {
+        "Attribute" : "@",
+        "Synonym" : "~",
+        "Antonym" : "!~",
+        "Deformation" : "->",
+        "Equivalence" : "<=>",
+        "Translation" : "*"
+    },
+    "SEPARATOR_MAP" : {
+        "SAME_MEANING_SEPERATOR" : "\t/\t",
+        "DIFFERENT_MEANING_SEPERATOR" : "\t//\t"
+    },
+    "INVALID_KEY_LIST" : ["", " ", "\n", "\\", "\\\\\\"]
+}
