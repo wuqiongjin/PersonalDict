@@ -14,23 +14,23 @@ DICT_INFO = r'C:/Users/{USER}/.dict_info.dat'
 
 config_obj = {}
 SPECIAL_SYMBOL_LIST = []
-# NAME_MAP2_SPECIAL_SYMBOL: 'ATTRIBUTE' : '@'
+# NAME_MAP2_SPECIAL_SYMBOL: 'Attribute' : '@'
 # SPECIAL_SYMBOL_MAP2_PRINT_NAME: '@' : '(Attribute)\n'
 NAME_MAP2_SPECIAL_SYMBOL = {}
 SPECIAL_SYMBOL_MAP2_PRINT_NAME = {}
 INVALIDATION_KEY_LIST = []
 DUPLICATE_CONTAIN_SYMBOL_FILTER = {}
-NEED_UPDATE = False
 
 file_list = {}      # 单词本的文件列表
 my_dict = {}        # key : value, value未经任何格式规划处理
 format_dict = {}    # 格式化字典, 里面存储了已经按照 固定格式 的单词内容
 key_list = []       # 提供模糊搜索数据来源的key的集合(其实就是所有的key)
-special_forms_map = {}  # special_form : [symbol, orignal] 提供 特殊变形->原型 的映射, 方便用户通过搜索特殊变形来查找原型. symbol表示它是哪种变形, orignal存储的是原型key
+special_forms_map2_symbolform_original_lt = {}  # { 特殊变形 : [['(Attribute)', 原型1], ['(Deformation)', 原型2], ...]] } 注意: value是一个二维数组.
 phrase_list = []   # 词组列表 （保存词组的列表, 里面存的是key)
 
 lock = threading.Lock()
 quit_flag = False
+need_update = False
 
 def init_parameters():
     global DICT_INFO, DICT_PATH, config_obj, SPECIAL_SYMBOL_LIST, NAME_MAP2_SPECIAL_SYMBOL, SPECIAL_SYMBOL_MAP2_PRINT_NAME, INVALIDATION_KEY_LIST
@@ -47,7 +47,7 @@ def init_parameters():
 
     # init global parameter
     SPECIAL_SYMBOL_LIST = list(config_obj['SYMBOL_MAP'].values())
-    NAME_MAP2_SPECIAL_SYMBOL = dict([key.upper(), val] for key, val in config_obj['SYMBOL_MAP'].items())    # 注意:列表推导式前面, 必须是 [key, val], 因为dict()方法只接受list转化过来
+    NAME_MAP2_SPECIAL_SYMBOL = dict([key, val] for key, val in config_obj['SYMBOL_MAP'].items())    # 注意:列表推导式前面, 必须是 [key, val], 因为dict()方法只接受list转化过来
     SPECIAL_SYMBOL_MAP2_PRINT_NAME = dict([val, f'({key})\n'] for key, val in config_obj['SYMBOL_MAP'].items())
     INVALIDATION_KEY_LIST = config_obj['INVALID_KEY_LIST']
 
@@ -102,8 +102,8 @@ def load_file_list():
                         res = line.split(':')
                         if len(res) == 2:
                             file_list[res[0]] = res[1].rstrip('\n')
-    except:
-        print(f"[WARNING]: load_key_list error!")
+    except Exception as e:
+        print(f"[WARNING]: load_key_list error!  --- filename:{e.__traceback__.tb_frame.f_globals['__file__']} - line:{e.__traceback__.tb_lineno}")
 
 def monitor_dict_update():
     while not quit_flag:
@@ -112,14 +112,14 @@ def monitor_dict_update():
             file_info = os.stat(filename)
 
             if filename not in file_list:
-                NEED_UPDATE = True
+                need_update = True
                 break
             
             if file_list[filename] != str(file_info.st_mtime) + '+' + str(file_info.st_size):
-                NEED_UPDATE = True
+                need_update = True
                 break
             
-        if NEED_UPDATE == True:
+        if need_update == True:
             with open(DICT_INFO, "w", encoding="utf-8") as f:
                 for filename in os.listdir(DICT_PATH):
                     filename = DICT_PATH + filename
@@ -133,7 +133,7 @@ def monitor_dict_update():
                     lock.release()  # 解锁
                     f.write(filename + ':' +  file_list[filename] + '\n')
                     # f.flush()
-        NEED_UPDATE = False
+        need_update = False
         time.sleep(0.1)
 
 def format_dict_by_meaning():
@@ -226,8 +226,8 @@ def format_dict_by_special_symbol():
             while index != -1:  # 这里用循环的原因: 当遇到 !~ 和 ~ 同时存在时, 为了找 ~, 需要找2次才能匹配到.
                 index = find_symbol_by_KMP(last_sentence, symbol, index)   # 无法区分 !~ 和~
                 # 下面的判断就是解决 !~和~ 这样的问题的: '将!~识别2次, 一次是作为!~, 一次是作为~'
-                if index != -1 and (last_sentence[index - 1] in DUPLICATE_CONTAIN_SYMBOL_FILTER 
-                                                or last_sentence[index + len(symbol)] in DUPLICATE_CONTAIN_SYMBOL_FILTER):
+                if index != -1 and (last_sentence[index - 1] in DUPLICATE_CONTAIN_SYMBOL_FILTER\
+                                    or last_sentence[index + len(symbol)] in DUPLICATE_CONTAIN_SYMBOL_FILTER):
                     index += len(symbol)
                     continue
 
@@ -249,21 +249,27 @@ def format_dict_by_special_symbol():
                 endIndex = findMatchBorderIndex(last_sentence, startIndex, '(', ')')
                 core_word = last_sentence[startIndex + 1 : endIndex]
                 
-                symbol_oringal_lt = [SPECIAL_SYMBOL_MAP2_PRINT_NAME[index_key].rstrip('\n'), key]    # special_forms_map的value
-                # divided_symbol_lt = [key]   # xxx_form_map的value, 它的value是一个list, 里面可能会有多组key值
+                symbol_original_lt = [SPECIAL_SYMBOL_MAP2_PRINT_NAME[index_key].rstrip('\n'), key]    # special_forms_map的value: [(Attribute), 原单词]
                 
-                # 判断同一个 special symbol 中是否存在多个 word
+                # 判断同一个 special symbol 中是否存在多个 word (多个近义词等)
                 if core_word.find(',') > 0:
                     core_word_lt = core_word.split(',')
                     core_word = ''
                     for word in core_word_lt:
-                        core_word += '\t·' + word.strip(' ') + '\n'
-                        if index_key != NAME_MAP2_SPECIAL_SYMBOL['ATTRIBUTE']:
-                            special_forms_map[word.strip(' ')] = symbol_oringal_lt
+                        word = word.strip()
+                        core_word += '\t·' + word + '\n'
+                        if index_key != NAME_MAP2_SPECIAL_SYMBOL['Attribute']:
+                            if word not in special_forms_map2_symbolform_original_lt:
+                                special_forms_map2_symbolform_original_lt[word] = []
+                            if symbol_original_lt not in special_forms_map2_symbolform_original_lt[word]:   # 因为format_dict需要实时更新, 这里必须判断 变形对应的 symbol_original 中不存在要添加的 symbol_original_lt. 否则每次 wb 文件更新, 都会新增之前添加过的 symbol_original_lt
+                                special_forms_map2_symbolform_original_lt[word].append(symbol_original_lt)
                     core_word = core_word.rstrip('\n')  # 多加了一个'\n' 要删除掉
                 else:
-                    if index_key != NAME_MAP2_SPECIAL_SYMBOL['ATTRIBUTE']:
-                        special_forms_map[core_word] = symbol_oringal_lt
+                    if index_key != NAME_MAP2_SPECIAL_SYMBOL['Attribute']:
+                        if core_word not in special_forms_map2_symbolform_original_lt:
+                            special_forms_map2_symbolform_original_lt[core_word] = []
+                        if symbol_original_lt not in special_forms_map2_symbolform_original_lt[core_word]:   # 因为format_dict需要实时更新, 这里必须判断 变形对应的 symbol_original 中不存在要添加的 symbol_original_lt. 否则每次 wb 文件更新, 都会新增之前添加过的 symbol_original_lt
+                            special_forms_map2_symbolform_original_lt[core_word].append(symbol_original_lt)
                     core_word = '\t·' + core_word
 
                 symbol_sentence = SPECIAL_SYMBOL_MAP2_PRINT_NAME[index_key] + core_word
@@ -293,7 +299,12 @@ def check_validation(search_word : str, possible_search_result_len : int = 0) ->
 
     return 1
 
-    
+def print_special_form_result(search_word, symbolform, original_word):
+    print(f"{search_word}\t-\t{symbolform} of [{original_word}]")
+    print(f"{original_word}:")
+    for s in format_dict[original_word]:
+        print(f"{s}")
+
 def search_dict():
     possible_search_result = []
     while True:
@@ -314,13 +325,29 @@ def search_dict():
 
             possible_search_result.clear()
 
-        elif ret == 1 and search_word in special_forms_map:  # 判断搜索的是否是特殊变形
-            orignal_word = special_forms_map[search_word][1]
-            print(f"{search_word}\t-\t{special_forms_map[search_word][0]} of [{orignal_word}]")
-            print(f"{orignal_word}:")
-            for s in format_dict[orignal_word]:
-                print(f"{s}")
-        
+        elif ret == 1 and search_word in special_forms_map2_symbolform_original_lt:  # 判断搜索的是否是特殊变形
+            """
+                Generic special form search (include all attributes)
+            """
+            if len(special_forms_map2_symbolform_original_lt[search_word]) == 1:
+                print_special_form_result(search_word, special_forms_map2_symbolform_original_lt[search_word][0][0], special_forms_map2_symbolform_original_lt[search_word][0][1])
+            else:
+                print("There are multiple original results here, please choose one to view:")
+                index = 0
+                for symbolform_original in special_forms_map2_symbolform_original_lt[search_word]:
+                    symbolform, original = symbolform_original[0], symbolform_original[1]
+                    print(f"[{index + 1}] - {symbolform} \tof\t [{original}]")
+                    index += 1
+                try:
+                    search_original = int(input("Choose a number\n"))
+                except ValueError as e:
+                    print(f"Error Input!!! --- filename:{e.__traceback__.tb_frame.f_globals['__file__']} - line:{e.__traceback__.tb_lineno}")
+                    possible_search_result.clear()
+                    continue
+                symbolform = special_forms_map2_symbolform_original_lt[search_word][search_original - 1][0]
+                original_word = special_forms_map2_symbolform_original_lt[search_word][search_original - 1][1]
+                print_special_form_result(search_word, symbolform, original_word)
+
             possible_search_result.clear()
 
         elif ret == 2 and len(possible_search_result) > 0:
@@ -360,6 +387,66 @@ def search_dict():
 #         result += f"can not find {search_word}!!!\n"
 #     result_text.delete("1.0", "end")
 #     result_text.insert("end", result)
+
+
+def division_search():
+    print("""--------- Welcome to Division Search of PersonalDict! ----------
+          0. Exit Division Search""")
+    for search_index, key in enumerate(NAME_MAP2_SPECIAL_SYMBOL.keys(), 1):
+        print(f"          {search_index}. Search by {key}")
+    search_index += 1
+    print(f"          {search_index}. Phrase's Search")
+    print("----------------------------------------------------------------")
+    while True:
+        try:
+            select = int(input("Choose a search option: "))
+            if select > search_index or select < 0:
+                raise ValueError
+        except ValueError as e:
+            print(f"Error Input! --- filename:{e.__traceback__.tb_frame.f_globals['__file__']} - line:{e.__traceback__.tb_lineno}")
+            continue
+        except:
+            return
+        
+        if select == 0:
+            print("Quit Division Search!")
+            return
+        elif select == search_index:    # Phrase's Search
+            pass
+        else:   # special form search
+            search_helper = dict([i, f"({key})"] for i, key in enumerate(NAME_MAP2_SPECIAL_SYMBOL.keys(), 1))
+            symbol_form = search_helper[select]
+            possible_results = []   # 二维数组, 存放的是 [['(Attribute)', 原型1]， ['Deformation', 原型2], ...]
+            
+            search_word = input("Input the word you want to search: ")
+            if search_word not in special_forms_map2_symbolform_original_lt:
+                print(f"Sorry, PersonalDict does not contain {symbol_form} for {search_word} currently.")
+                return
+            
+            symbolform_original_lt_lt = special_forms_map2_symbolform_original_lt[search_word]
+            for symbol_form_original_lt in symbolform_original_lt_lt:
+                if symbol_form_original_lt[0] == symbol_form:
+                    possible_results.append(symbol_form_original_lt)
+            
+            if len(possible_results) == 0:
+                print(f"Sorry, PersonalDict does not contain {symbol_form} for {search_word} currently.")
+            elif len(possible_results) == 1:
+                original_word = possible_results[0][1]
+                print_special_form_result(search_word, symbol_form, original_word)
+            else:
+                print(f"There are multiple {symbol_form} of original results here, please choose one to view:")
+                index = 0
+                for symbolform, original in possible_results:
+                    print(f"[{index + 1}] - {symbolform} \tof\t [{original}]")
+                    index += 1
+                try:
+                    search_original = int(input("Choose a number: "))
+                except Exception as e:
+                    print(f"Error Input!!! --- filename:{e.__traceback__.tb_frame.f_globals['__file__']} - line:{e.__traceback__.tb_lineno}")
+                    return
+                original_word = possible_results[search_original - 1][1]
+                print_special_form_result(search_word, symbol_form, original_word)
+            return
 
 
 def read_line_dict(target=format_dict):
@@ -417,7 +504,7 @@ def add_words_to_dict():
 
     new_word = input("Please enter the word you want to add: ")
     if not check_validation(new_word):
-        print("Error Word Input!")
+        print(f"Error Word Input! --- check_validation Failed!")
         return
     if new_word.lower() in my_dict:
         print(f"{new_word} has already existed!")
@@ -505,7 +592,8 @@ mode_dict = {
     1 : search_dict,
     2 : add_words_to_dict,
     3 : read_line_dict,
-    4 : lambda : read_line_dict(target=phrase_list)
+    4 : lambda : read_line_dict(target=phrase_list),
+    5 : division_search
 }
 
 def select_mode():
@@ -516,6 +604,7 @@ def select_mode():
             2. Add New Word to Dict
             3. Browser Dict
             4. Browser Phrase
+            5. More Detailed Search Options
 ---------------------------------------------
         """)
         mode = int(input("choose a mode to use: "))
@@ -523,10 +612,10 @@ def select_mode():
             mode_dict[mode]()
         else:
             raise KeyError
-    except KeyError:
-        print("mode is not in range!")
-    except ValueError:
-        print("Wrong Input!")
+    except KeyError as e:
+        print(f"mode is not in range!  --- filename:{e.__traceback__.tb_frame.f_globals['__file__']} - line:{e.__traceback__.tb_lineno}")
+    except ValueError as e:
+        print(f"Wrong Input! --- filename:{e.__traceback__.tb_frame.f_globals['__file__']} - line:{e.__traceback__.tb_lineno}")
 
 if __name__ == '__main__':
     init_parameters()
