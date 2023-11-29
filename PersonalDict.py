@@ -25,7 +25,8 @@ file_list = {}      # 单词本的文件列表
 my_dict = {}        # key : value, value未经任何格式规划处理
 format_dict = {}    # 格式化字典, 里面存储了已经按照 固定格式 的单词内容
 key_list = []       # 提供模糊搜索数据来源的key的集合(其实就是所有的key)
-special_forms_map2_symbolform_original_lt = {}  # { 特殊变形 : [['(Attribute)', 原型1], ['(Deformation)', 原型2], ...]] } 注意: value是一个二维数组.
+special_forms_map2_symbolform_original_lt = {}  # { 特殊变形 : [['(Synonym)', 原型1], ['(Deformation)', 原型2], ...]] } 注意: value是一个二维数组. (这里的特殊变形不包含Attribute)
+attribute_map2_symbolform_original_lt = {}
 phrase_list = []   # 词组列表 （保存词组的列表, 里面存的是key)
 
 lock = threading.Lock()
@@ -251,6 +252,8 @@ def format_dict_by_special_symbol():
                 
                 symbol_original_lt = [SPECIAL_SYMBOL_MAP2_PRINT_NAME[index_key].rstrip('\n'), key]    # special_forms_map的value: [(Attribute), 原单词]
                 
+                form_map_lt = special_forms_map2_symbolform_original_lt if index_key != NAME_MAP2_SPECIAL_SYMBOL['Attribute'] else attribute_map2_symbolform_original_lt
+                
                 # 判断同一个 special symbol 中是否存在多个 word (多个近义词等)
                 if core_word.find(',') > 0:
                     core_word_lt = core_word.split(',')
@@ -258,18 +261,18 @@ def format_dict_by_special_symbol():
                     for word in core_word_lt:
                         word = word.strip()
                         core_word += '\t·' + word + '\n'
-                        if index_key != NAME_MAP2_SPECIAL_SYMBOL['Attribute']:
-                            if word not in special_forms_map2_symbolform_original_lt:
-                                special_forms_map2_symbolform_original_lt[word] = []
-                            if symbol_original_lt not in special_forms_map2_symbolform_original_lt[word]:   # 因为format_dict需要实时更新, 这里必须判断 变形对应的 symbol_original 中不存在要添加的 symbol_original_lt. 否则每次 wb 文件更新, 都会新增之前添加过的 symbol_original_lt
-                                special_forms_map2_symbolform_original_lt[word].append(symbol_original_lt)
+                        # if index_key != NAME_MAP2_SPECIAL_SYMBOL['Attribute']:
+                        if word not in form_map_lt:
+                            form_map_lt[word] = []
+                        if symbol_original_lt not in form_map_lt[word]:   # 因为format_dict需要实时更新, 这里必须判断 变形对应的 symbol_original 中不存在要添加的 symbol_original_lt. 否则每次 wb 文件更新, 都会新增之前添加过的 symbol_original_lt
+                            form_map_lt[word].append(symbol_original_lt)
                     core_word = core_word.rstrip('\n')  # 多加了一个'\n' 要删除掉
                 else:
-                    if index_key != NAME_MAP2_SPECIAL_SYMBOL['Attribute']:
-                        if core_word not in special_forms_map2_symbolform_original_lt:
-                            special_forms_map2_symbolform_original_lt[core_word] = []
-                        if symbol_original_lt not in special_forms_map2_symbolform_original_lt[core_word]:   # 因为format_dict需要实时更新, 这里必须判断 变形对应的 symbol_original 中不存在要添加的 symbol_original_lt. 否则每次 wb 文件更新, 都会新增之前添加过的 symbol_original_lt
-                            special_forms_map2_symbolform_original_lt[core_word].append(symbol_original_lt)
+                    # if index_key != NAME_MAP2_SPECIAL_SYMBOL['Attribute']:
+                    if core_word not in form_map_lt:
+                        form_map_lt[core_word] = []
+                    if symbol_original_lt not in form_map_lt[core_word]:   # 因为format_dict需要实时更新, 这里必须判断 变形对应的 symbol_original 中不存在要添加的 symbol_original_lt. 否则每次 wb 文件更新, 都会新增之前添加过的 symbol_original_lt
+                        form_map_lt[core_word].append(symbol_original_lt)
                     core_word = '\t·' + core_word
 
                 symbol_sentence = SPECIAL_SYMBOL_MAP2_PRINT_NAME[index_key] + core_word
@@ -416,14 +419,17 @@ def division_search():
         else:   # special form search
             search_helper = dict([i, f"({key})"] for i, key in enumerate(NAME_MAP2_SPECIAL_SYMBOL.keys(), 1))
             symbol_form = search_helper[select]
-            possible_results = []   # 二维数组, 存放的是 [['(Attribute)', 原型1]， ['Deformation', 原型2], ...]
+            possible_results = []   # 二维数组, 存放的是 [['(Synonym)', 原型1]， ['Deformation', 原型2], ...]
             
-            search_word = input("Input the word you want to search: ")
-            if search_word not in special_forms_map2_symbolform_original_lt:
+            search_word = input(f"Input the {symbol_form} you want to search: ")
+
+            form_map_lt = special_forms_map2_symbolform_original_lt if symbol_form != search_helper[1] else attribute_map2_symbolform_original_lt
+
+            if search_word not in form_map_lt:
                 print(f"Sorry, PersonalDict does not contain {symbol_form} for {search_word} currently.")
                 return
-            
-            symbolform_original_lt_lt = special_forms_map2_symbolform_original_lt[search_word]
+
+            symbolform_original_lt_lt = form_map_lt[search_word]
             for symbol_form_original_lt in symbolform_original_lt_lt:
                 if symbol_form_original_lt[0] == symbol_form:
                     possible_results.append(symbol_form_original_lt)
@@ -441,6 +447,8 @@ def division_search():
                     index += 1
                 try:
                     search_original = int(input("Choose a number: "))
+                    if search_original > len(possible_results) or search_original <= 0:
+                        raise ValueError
                 except Exception as e:
                     print(f"Error Input!!! --- filename:{e.__traceback__.tb_frame.f_globals['__file__']} - line:{e.__traceback__.tb_lineno}")
                     return
@@ -518,11 +526,11 @@ def add_words_to_dict():
     \t 1. Add Sentence
     \t 2. Add Another Meaning Sentence
     \t 3. Add Attribute
-    \t 4. Synonym
-    \t 5. Antonym
-    \t 6. Deformation
-    \t 7. Equivalence
-    \t 8. Translation
+    \t 4. Add Synonym
+    \t 5. Add Antonym
+    \t 6. Add Deformation
+    \t 7. Add Equivalence
+    \t 8. Add Translation
     """)
 
     value = ""
