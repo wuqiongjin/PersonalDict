@@ -31,7 +31,7 @@ phrase_list = []   # 词组列表 （保存词组的列表, 里面存的是key)
 
 lock = threading.Lock()
 quit_flag = False
-need_update = False
+need_update = True
 
 def init_parameters():
     global DICT_INFO, DICT_PATH, config_obj, SPECIAL_SYMBOL_LIST, NAME_MAP2_SPECIAL_SYMBOL, SPECIAL_SYMBOL_MAP2_PRINT_NAME, INVALIDATION_KEY_LIST
@@ -100,13 +100,14 @@ def load_file_list():
                     if line == '':
                         break
                     else:
-                        res = line.split(':')
+                        res = line.split('?')
                         if len(res) == 2:
                             file_list[res[0]] = res[1].rstrip('\n')
     except Exception as e:
         print(f"[WARNING]: load_key_list error!  --- filename:{e.__traceback__.tb_frame.f_globals['__file__']} - line:{e.__traceback__.tb_lineno}")
 
 def monitor_dict_update():
+    global need_update
     while not quit_flag:
         for filename in os.listdir(DICT_PATH):
             filename = DICT_PATH + filename # 拼接字典文件的路径前缀
@@ -128,11 +129,15 @@ def monitor_dict_update():
                     # file_md5 = hashlib.md5()
                     file_list[filename] = str(file_info.st_mtime) + '+' + str(file_info.st_size)
                     lock.acquire()  # 涉及操作 全局变量, 加锁保护
+                    if need_update == False:
+                        lock.release()
+                        time.sleep(0.1)
+                        continue
                     update_dict(filename)
                     format_dict_by_meaning()
                     format_dict_by_special_symbol()
                     lock.release()  # 解锁
-                    f.write(filename + ':' +  file_list[filename] + '\n')
+                    f.write(filename + '?' +  file_list[filename] + '\n')
                     # f.flush()
         need_update = False
         time.sleep(0.1)
@@ -395,15 +400,15 @@ def search_dict():
 def division_search():
     print("""--------- Welcome to Division Search of PersonalDict! ----------
           0. Exit Division Search""")
-    for search_index, key in enumerate(NAME_MAP2_SPECIAL_SYMBOL.keys(), 1):
-        print(f"          {search_index}. Search by {key}")
-    search_index += 1
-    print(f"          {search_index}. Phrase's Search")
+    for function_index, key in enumerate(NAME_MAP2_SPECIAL_SYMBOL.keys(), 1):
+        print(f"          {function_index}. Search by {key}")
+    function_index += 1
+    print(f"          {function_index}. Phrase's Search")
     print("----------------------------------------------------------------")
     while True:
         try:
             select = int(input("Choose a search option: "))
-            if select > search_index or select < 0:
+            if select > function_index or select < 0:
                 raise ValueError
         except ValueError as e:
             print(f"Error Input! --- filename:{e.__traceback__.tb_frame.f_globals['__file__']} - line:{e.__traceback__.tb_lineno}")
@@ -414,7 +419,7 @@ def division_search():
         if select == 0:
             print("Quit Division Search!")
             return
-        elif select == search_index:    # Phrase's Search
+        elif select == function_index:    # Phrase's Search
             pass
         else:   # special form search
             search_helper = dict([i, f"({key})"] for i, key in enumerate(NAME_MAP2_SPECIAL_SYMBOL.keys(), 1))
@@ -524,14 +529,9 @@ def add_words_to_dict():
     \t-1. Withdraw last Input
     \t 0. All Done --- Save this Word to the Dict
     \t 1. Add Sentence
-    \t 2. Add Another Meaning Sentence
-    \t 3. Add Attribute
-    \t 4. Add Synonym
-    \t 5. Add Antonym
-    \t 6. Add Deformation
-    \t 7. Add Equivalence
-    \t 8. Add Translation
-    """)
+    \t 2. Add Another Meaning Sentence""")
+    for function_index, key in enumerate(NAME_MAP2_SPECIAL_SYMBOL.keys(), 3):
+        print(f"\t {function_index}. Add {key}")
 
     value = ""
     results = [[] for _ in range(9)]
@@ -545,7 +545,7 @@ def add_words_to_dict():
         
         select = int(select)
 
-        if select < -3 or select > 8:
+        if select < -3 or select > function_index:
             print("Your select is out of range!")
             continue
 
@@ -595,13 +595,27 @@ def add_words_to_dict():
                 results[select].append(raw_value)
                 stack.append((select,))
 
+
+def modify_words():
+    print("""
+          0. Quit
+          1. Add new 'Attributes'
+          2. Modify 'Attributes'
+          3. Modify Word itself
+          4. Delete 'Attributes'
+          5. Delete whole Word
+          """)
+    
+
+
 mode_dict = {
     0 : exit_dict,
     1 : search_dict,
     2 : add_words_to_dict,
     3 : read_line_dict,
     4 : lambda : read_line_dict(target=phrase_list),
-    5 : division_search
+    5 : division_search,
+    6 : modify_words
 }
 
 def select_mode():
@@ -613,6 +627,7 @@ def select_mode():
             3. Browser Dict
             4. Browser Phrase
             5. More Detailed Search Options
+            6. Modify Words
 ---------------------------------------------
         """)
         mode = int(input("choose a mode to use: "))
