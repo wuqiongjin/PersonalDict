@@ -114,3 +114,49 @@ skew: skew the results	~(distort, twist)	->(skewed, skewness)	*(曲解, 使存�
 
 astray: He will tempt you and lead you astray.	/	go astray	/	lead sb astray
 
+span: She does have a short attention span.	/	an attention span	注意力持续时间	//	a life span	寿命	//	a bridge span	桥的跨度	//	span 20,000 years	持续两万年	@(n, vt)	~(duration, range, scope, last)	->(lifespan)	*(持续时间, 范围, 跨度, 宽度, 持续, 贯穿)
+
+portion: a portion of fruit	//	a significant portion	~(part, section, bit, proportion)	*(部分, 一份)
+
+vacancy: I reckon there is a job vacancy coming up.	/	a job vacancy	//	fill a vacancy	//	no vacancy	没有空房/客满	->(vacant, vacate, vacation)	*((职位的)空缺, 空房)
+
+locality: Each locality specialises in a different variety of seafood.	~(area, region, district, zone, section)	->(local, locally, localize, localized)	*(地区, 区域)
+
+compound: an organic compound	//	a compound sentence	//	compound sth with sth	把...和...混合	@(n, adj, vt)	~(combination, blend, mixture, mix, hybrid, cocktail, synthesis, mingle)	->(compounded, decompound)	*(化合物, 混合物, 复合的, 使恶化, 混合)
+
+refreshment: Do we have refreshments for our guests?	/	serve refreshments	供应茶点	//	a refreshment stand	小吃摊	->(refresh, refreshing, fresh, refreshed, refresher)	*(茶点, 食品和饮料)
+
+scorching: a scorching summer day	/	scorching heat	酷热	->(scorch, scorched, scorcher)	*(酷热的, 严厉的, 尖刻的)
+
+innocent: Many innocent people were killed.	许多无辜的人因此而丧生.	/	an innocent victim	无辜受害者	@(adj, n)	->(innocence, innocently)	*(无罪的, 无辜受害的, 纯真的, 无辜的人, 天真的人)
+
+approach: approach a car	靠近一辆车	//	approach 100 kilometers an hour	接近每小时100公里	//	approach a problem	//	approach you for work	工作接洽	//	an approach to sth	对...的方法, 对...的态度	@(vi, vt, n)	~(means, way, method, avenue, road, near, approximate)	->(approaching, approachable, unapproachable)	*(靠近, 接近, 要求, 处理, 对付, 方法, 态度, 路径, 接洽)
+
+keen: a keen gardener	热衷园艺的人	//	a keen mind	敏捷的头脑	//	a keen interest	强烈的兴趣	//	keen eyesight	敏锐的视力	//	be keen on 渴望,热衷于	~(eager, anxious, thirsty, hungry, enthusiastic, passionate, addicted, sharp, acute)	->(keenly, keenness)	*(渴望的, 热情的, 着迷的, 机智的, 强烈的, 灵敏的)
+
+primarily: ~(mainly, for the most part, predominantly, principally)	->(prime, primary, primarily, primacy, primer)	*(主要的)
+
+stiff: Light as a feather, stiff as a board.	~(hard, firm, solid, rigid, unyielding)	->(stiffen, stiffening, stiffly)	*(硬的)
+
+timber: Modern houses, especially in the suburbs, are still largely made of timber.	/	a pile of timber	一堆木材	~(wood, lumber)	*(木材, 木料, 树林)
+
+profound: The environment has a very profound impact on your development.	/	a profound impact	//	a profound change	巨大的变化	~(far-reaching)	->(profoundly, profoundity)	*(深远的, 知识渊博的)
+
+quota: a strict quota	严格限额	/	a fishing quota	捕鱼限额	~(allowance)	*(限额, 配额, 定额, 指标)
+
+suspect: We suspect he was murdered.	/	suspect you of murder	怀疑你有谋杀罪	//	a prime suspect	主要嫌疑人	/	a murder suspect	谋杀嫌疑犯	@(vt, vi, n)	~(doubt)	->(suspicion, suspicious, suspiciously, suspected)	*(怀疑, 猜想, 嫌疑犯)
+
+deterioration: It demonstrated, they said, a drastic deterioration of the war.	他们称这表明战争正在急剧恶化.	/	a rapid deterioration	/	deterioration of the environment	环境恶化	//	cultural deterioration	文化衰退	@(n)	~(decline, degradation)	->(deteriorate)	*(恶化, 衰退)
+
+journalist: a television journalist	电视记者	~(reporter)	->(journal, journalism, journalistic)	*(记者, 新闻工作者)
+
+condemn: I don't condemn people for their mistakes.	/	condemn sb for sth	因某事谴责某人	~(accuse, charge, denounce)	->(condemned, condemnation, condemnatory)	*(谴责)
+
+transcend: transcend your limits	超越自身极限	/	transcend cultural boundaries	超越文化界限	~(exceed)	->(transcendent, transcendence, transcendental)	*(超出, 超越)
+
+cumulative: Knowledge is cumulative, easy to share, and generates benefits that spill rapidly across borders.	/	cumulative effect	日积月累的影响	->(cumulate, cumulation)	*(累加的, 积累的)
+
+adobe: an adobe house	土坯房	*((建筑用)土坯, 砖坯)
+
+arousal: physiological arousal	生理唤醒	//	sexual arousal	性欲的激发	->(rouse, arouse, roused)	*(唤起(尤指性欲), 激发)
+
